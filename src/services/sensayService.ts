@@ -99,14 +99,14 @@ export const getSensayReplica = async (): Promise<string> => {
 
 // Use Sensay for standard chat completions
 export const callSensay = async (messages: ChatMessage[]): Promise<string> => {
-  const apiKey = getSensayApiKey();
-  if (!apiKey) {
-    return "Please provide a Sensay API key in the settings to use the chatbot.";
-  }
-
+    const apiKey = getSensayApiKey();
+    if (!apiKey) {
+      return "Please provide a Sensay API key in the settings to use the chatbot.";
+    }
+    
   // Get replica ID for the session
-  const replicaId = await getSensayReplica();
-
+    const replicaId = await getSensayReplica();
+    
   // Call through the Sensay proxy function
   const response = await fetch("/api/sensay-proxy", {
     method: "POST",

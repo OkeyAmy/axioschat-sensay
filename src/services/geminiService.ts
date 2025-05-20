@@ -10,16 +10,22 @@ export interface GeminiFunctionRequest {
 
 // Get Gemini API token from localStorage
 const getGeminiApiToken = (): string => {
+  let token = ""
   try {
     const apiKeys = localStorage.getItem("apiKeys")
     if (apiKeys) {
       const parsed = JSON.parse(apiKeys)
-      return parsed.gemini || ""
+      if (parsed.gemini) token = parsed.gemini
     }
   } catch (error) {
-    console.error("Error retrieving Gemini API token:", error)
+    console.error("Error retrieving Gemini API token from localStorage:", error)
   }
-  return ""
+  // Fallback to environment variables if not found in localStorage
+  if (!token) {
+    token = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.NEXT_PUBLIC_GEMINI_API_KEY || ""
+    if (token) console.log("Using Gemini API key from environment variable")
+  }
+  return token
 }
 
 // Call Gemini model for function calling with retry mechanism for stability
@@ -61,23 +67,16 @@ export const callGeminiForFunctions = async (
     let retryCount = 0
     let responseData
 
-    while (retryCount <= maxRetries) {
-      try {
-        // Determine if we're in production or development
-        const isProduction =
-          typeof window !== "undefined" &&
-          !window.location.hostname.includes("localhost") &&
-          !window.location.hostname.includes("127.0.0.1")
+    // Always call the deployed Render endpoint directly
+    const apiUrl = 'https://axioschat-sensay.onrender.com/api/gemini_functions'
 
-        // Use the appropriate API endpoint
-        const apiUrl = "/api/gemini_functions"
-
-        console.log(`Calling Gemini function API at ${apiUrl}`)
-
-        // Call the proxy server with a timeout to prevent hanging requests
+    // Retry local proxy then fallback to deployed Render server
+    const fallbackBaseUrl = "https://axioschat-sensay.onrender.com"
+    try {
+      while (retryCount <= maxRetries) {
+        console.log(`Calling local Gemini API at ${apiUrl}`)
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
-        
+        const timeoutId = setTimeout(() => controller.abort(), 30000)
         const response = await fetch(apiUrl, {
           method: "POST",
           headers: {
@@ -85,64 +84,54 @@ export const callGeminiForFunctions = async (
             "X-Gemini-API-Key": GEMINI_API_KEY,
           },
           body: JSON.stringify(requestBody),
-          signal: controller.signal
+          signal: controller.signal,
         })
-        
         clearTimeout(timeoutId)
-
-        console.log("Gemini Functions response status:", response.status)
-
+        console.log("Local response status:", response.status)
         if (!response.ok) {
-          let errorMessage = `Gemini Functions API Error (${response.status}): `
+          let errMsg = `Local proxy error (${response.status}): `
           try {
-            const errorData = await response.json()
-            console.error("Gemini Functions API Error Response:", errorData)
-            errorMessage += errorData.detail || errorData.error || "Unknown error"
-          } catch (e) {
-            errorMessage += "Could not parse error response"
-          }
-          throw new Error(errorMessage)
+            const errJson = await response.json()
+            errMsg += errJson.error || JSON.stringify(errJson)
+          } catch {}
+          throw new Error(errMsg)
         }
-
         responseData = await response.json()
-        console.log("Gemini Functions response data:", responseData)
-
-        // Check if we got a valid response with output
+        console.log("Local response data:", responseData)
         if (!responseData.output) {
-          console.log(`Attempt ${retryCount + 1}: Gemini returned no output. Retrying...`)
           retryCount++
-
+          console.log(`Attempt ${retryCount}: no output, retrying...`)
           if (retryCount <= maxRetries) {
-            // Wait before retrying (exponential backoff)
-            await new Promise((resolve) => setTimeout(resolve, 1000 * Math.pow(2, retryCount)))
+            await new Promise((r) => setTimeout(r, 1000 * 2 ** retryCount))
             continue
           }
-        } else {
-          // We got a valid response, break out of the retry loop
-          break
         }
-      } catch (error) {
-        console.error(`Attempt ${retryCount + 1} failed:`, error)
-        
-        // Check for timeout/abort errors
-        if (error instanceof DOMException && error.name === "AbortError") {
-          console.error("Request timed out")
-          return { error: "Request timed out. Please try again." }
-        }
-        
-        retryCount++
-
-        if (retryCount <= maxRetries) {
-          // Wait before retrying (exponential backoff)
-          await new Promise((resolve) => setTimeout(resolve, 1000 * Math.pow(2, retryCount)))
-          continue
-        }
-        throw error
+        break
       }
+    } catch (localErr) {
+      console.warn("Local proxy failed, falling back to Render server:", localErr)
+      const remoteUrl = `${fallbackBaseUrl}/api/gemini_functions`
+      console.log(`Calling remote fallback at ${remoteUrl}`)
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000)
+      const response = await fetch(remoteUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Gemini-API-Key": GEMINI_API_KEY,
+        },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal,
+      })
+      clearTimeout(timeoutId)
+      if (!response.ok) {
+        throw new Error(`Remote fallback error (${response.status})`)
+      }
+      responseData = await response.json()
+      console.log("Remote fallback data:", responseData)
     }
-
     if (!responseData) {
-      return { error: "No response from Gemini" }
+      return { error: "No response from local or remote Gemini endpoints" }
     }
     
     if (responseData.error) {

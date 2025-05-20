@@ -1,5 +1,7 @@
 # AxiosChat: Your Intelligent Web3 Navigator
 
+**Python proxy backend (`replicate_py.py`) deployed at:** https://axioschat-sensay.onrender.com
+
 <div align="center">
   <img src="public\Axios.png" alt="AxiosChat Banner" width="100%">
   
