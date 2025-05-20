@@ -137,10 +137,10 @@ def proxy_gemini_functions():
     if not request_data:
         return jsonify({"error": "Request body is required"}), 400
     
-    # Get the Gemini API key from the headers
-    gemini_api_key = request.headers.get('X-Gemini-API-Key')
+    # Get the Gemini API key from the headers or environment
+    gemini_api_key = request.headers.get('X-Gemini-API-Key') or os.environ.get('GEMINI_API_KEY')
     if not gemini_api_key:
-        return jsonify({"error": "Gemini API key (X-Gemini-API-Key) is required in headers"}), 401
+        return jsonify({"error": "Gemini API key is required (set via header or GEMINI_API_KEY env var)"}), 401
     
     try:
         # Configure the Gemini SDK with the API key
