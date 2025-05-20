@@ -59,8 +59,8 @@ export const callGeminiForFunctions = async (
     let retryCount = 0
     let responseData
 
-    // Determine the API endpoint (will be rewritten by Vercel to your Render backend)
-    const apiUrl = "/api/gemini_functions"
+    // Always call the deployed backend directly
+    const apiUrl = "https://axioschat-sensay.onrender.com/api/gemini_functions"
 
     // Retry loop for stability
     while (retryCount <= maxRetries) {
