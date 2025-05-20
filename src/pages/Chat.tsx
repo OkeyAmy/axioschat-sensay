@@ -301,7 +301,7 @@ DO NOT make up any blockchain data. ONLY identify if a function call is needed.`
 
           // Check if Replicate API key is available
           if (!replicateApiKey) {
-              throw new Error("Replicate API key is required to use the Flock Web3 model");
+              throw new Error("Gemini API key is required to use the function calling feature");
           }
 
           // Get the tools JSON
