@@ -34,15 +34,7 @@ export const callGeminiForFunctions = async (
 ): Promise<string | { text?: string; error?: string; functionCalls?: any[] }> => {
   try {
     const GEMINI_API_KEY = getGeminiApiToken()
-
-    if (!GEMINI_API_KEY) {
-      toast({
-        title: "API Token Missing",
-        description: "Please provide a Gemini API key in the settings",
-        variant: "destructive",
-      })
-      return "Error: Please provide a Gemini API key in the settings"
-    }
+    // Note: proceed even if no GEMINI_API_KEY to allow backend to handle defaults
 
     console.log("Calling Gemini API with input:", {
       query: input.query.substring(0, 50) + "...",
@@ -67,14 +59,12 @@ export const callGeminiForFunctions = async (
     let retryCount = 0
     let responseData
 
-    // Always call the deployed Render endpoint directly
-    const apiUrl = 'https://axioschat-sensay.onrender.com/api/gemini_functions'
+    // Determine the API endpoint (will be rewritten by Vercel to your Render backend)
+    const apiUrl = "/api/gemini_functions"
 
-    // Retry local proxy then fallback to deployed Render server
-    const fallbackBaseUrl = "https://axioschat-sensay.onrender.com"
-    try {
-      while (retryCount <= maxRetries) {
-        console.log(`Calling local Gemini API at ${apiUrl}`)
+    // Retry loop for stability
+    while (retryCount <= maxRetries) {
+      try {
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), 30000)
         const response = await fetch(apiUrl, {
@@ -87,51 +77,31 @@ export const callGeminiForFunctions = async (
           signal: controller.signal,
         })
         clearTimeout(timeoutId)
-        console.log("Local response status:", response.status)
         if (!response.ok) {
-          let errMsg = `Local proxy error (${response.status}): `
+          let errorMessage = `Gemini API Error (${response.status}): `
           try {
-            const errJson = await response.json()
-            errMsg += errJson.error || JSON.stringify(errJson)
+            const data = await response.json()
+            errorMessage += data.error || JSON.stringify(data)
           } catch {}
-          throw new Error(errMsg)
+          throw new Error(errorMessage)
         }
         responseData = await response.json()
-        console.log("Local response data:", responseData)
-        if (!responseData.output) {
-          retryCount++
-          console.log(`Attempt ${retryCount}: no output, retrying...`)
-          if (retryCount <= maxRetries) {
-            await new Promise((r) => setTimeout(r, 1000 * 2 ** retryCount))
-            continue
-          }
-        }
         break
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return { error: "Request timed out. Please try again." }
+        }
+        retryCount++
+        if (retryCount <= maxRetries) {
+          await new Promise((res) => setTimeout(res, 1000 * 2 ** retryCount))
+          continue
+        }
+        throw error
       }
-    } catch (localErr) {
-      console.warn("Local proxy failed, falling back to Render server:", localErr)
-      const remoteUrl = `${fallbackBaseUrl}/api/gemini_functions`
-      console.log(`Calling remote fallback at ${remoteUrl}`)
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 30000)
-      const response = await fetch(remoteUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Gemini-API-Key": GEMINI_API_KEY,
-        },
-        body: JSON.stringify(requestBody),
-        signal: controller.signal,
-      })
-      clearTimeout(timeoutId)
-      if (!response.ok) {
-        throw new Error(`Remote fallback error (${response.status})`)
-      }
-      responseData = await response.json()
-      console.log("Remote fallback data:", responseData)
     }
+
     if (!responseData) {
-      return { error: "No response from local or remote Gemini endpoints" }
+      return { error: "No response from Gemini endpoint" }
     }
     
     if (responseData.error) {
