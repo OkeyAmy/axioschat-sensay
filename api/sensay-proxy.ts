@@ -1,4 +1,4 @@
-import { vercelFetch } from "@vercel/fetch";
+import vercelFetch from "@vercel/fetch";
 import { NextApiRequest, NextApiResponse } from "next";
 
 // Initialize fetch with retry and timeout capabilities
