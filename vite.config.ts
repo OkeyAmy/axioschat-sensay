@@ -42,6 +42,11 @@ export default defineConfig(({ mode }) => ({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/replicate/, '/api/replicate'),
       },
+      '/api/sensay-proxy': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/sensay-proxy/, '/api/sensay-proxy'),
+      },
     }
   },
   plugins: [

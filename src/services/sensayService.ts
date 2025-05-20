@@ -99,43 +99,34 @@ export const getSensayReplica = async (): Promise<string> => {
 
 // Use Sensay for standard chat completions
 export const callSensay = async (messages: ChatMessage[]): Promise<string> => {
-  try {
-    const apiKey = getSensayApiKey();
-    
-    if (!apiKey) {
-      return "Please provide a Sensay API key in the settings to use the chatbot.";
-    }
-    
-    // Extract the last user message
-    const lastUserMessage = [...messages].reverse().find(msg => msg.role === "user");
-    
-    if (!lastUserMessage) {
-      return "No user message found to send to Sensay.";
-    }
-    
-    // Initialize client and get replica ID
-    const client = initializeSensayClient();
-    const replicaId = await getSensayReplica();
-    
-    console.log("Using Sensay replica:", replicaId);
-    
-    // Call Sensay API with standard completions endpoint
-    const response = await client.chatCompletions.postV1ReplicasChatCompletions(
-      replicaId,
-      API_VERSION,
-      {
-        content: lastUserMessage.content,
-        source: "web",
-        skip_chat_history: false
-      }
-    );
-    
-    // Return the content
-    return response.content || "No response from Sensay";
-  } catch (error) {
-    console.error("Error calling Sensay:", error);
-    return `Error: ${error instanceof Error ? error.message : "Unknown error"}`;
+  const apiKey = getSensayApiKey();
+  if (!apiKey) {
+    return "Please provide a Sensay API key in the settings to use the chatbot.";
   }
+
+  // Get replica ID for the session
+  const replicaId = await getSensayReplica();
+
+  // Call through the Sensay proxy function
+  const response = await fetch("/api/sensay-proxy", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-ORGANIZATION-SECRET": apiKey,
+      "X-USER-ID": SAMPLE_USER_ID,
+      "X-API-Version": API_VERSION,
+    },
+    body: JSON.stringify({ replicaId, messages, source: "web", store: true }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    console.error("Sensay proxy error:", errorData);
+    return errorData.error || `Error: ${response.status}`;
+  }
+
+  const data = await response.json();
+  return data.content || "No response from Sensay";
 };
 
 // Use Sensay for OpenAI-compatible chat completions (with conversation context)
