@@ -67,12 +67,17 @@ export const callGeminiForFunctions = async (
       try {
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), 30000)
+
+        const headers: HeadersInit = {
+          "Content-Type": "application/json",
+        }
+        if (GEMINI_API_KEY) {
+          headers["X-Gemini-API-Key"] = GEMINI_API_KEY
+        }
+
         const response = await fetch(apiUrl, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Gemini-API-Key": GEMINI_API_KEY,
-          },
+          headers: headers,
           body: JSON.stringify(requestBody),
           signal: controller.signal,
         })
