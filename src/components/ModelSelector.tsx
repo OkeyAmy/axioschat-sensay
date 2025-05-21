@@ -233,11 +233,11 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
                 placeholder="Enter Sensay API key"
                 className="h-9 bg-white/50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 focus-visible:ring-fuchsia-500"
               />
-              <div className="p-3 bg-gradient-to-r from-fuchsia-100/50 to-violet-100/50 dark:from-fuchsia-900/20 dark:to-violet-900/20 rounded-lg mt-3">
+              {/* <div className="p-3 bg-gradient-to-r from-fuchsia-100/50 to-violet-100/50 dark:from-fuchsia-900/20 dark:to-violet-900/20 rounded-lg mt-3">
                 <p className="text-xs text-gray-700 dark:text-gray-300">
                   <span className="font-medium">✨ Recommended:</span> Sensay provides enhanced Web3 understanding with specialized blockchain knowledge.
                 </p>
-              </div>
+              </div> */}
             </div>
           </div>
         </motion.div>
