@@ -86,7 +86,7 @@ export const callGeminiForFunctions = async (
           throw new Error(errorMessage)
         }
         responseData = await response.json()
-          break
+        break
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") {
           return { error: "Request timed out. Please try again." }
