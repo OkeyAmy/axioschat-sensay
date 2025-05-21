@@ -327,6 +327,28 @@ def proxy_gemini_functions():
     
     return jsonify({"error": "Maximum retries exceeded"}), 500
 
+@app.route('/api/gemini_health', methods=['GET'])
+def gemini_health_check():
+    """
+    Health check endpoint to verify Gemini API key configuration.
+    """
+    print("Received request for /api/gemini_health")
+    gemini_api_key = request.headers.get('X-Gemini-API-Key') or os.environ.get('GEMINI_API_KEY')
+    
+    if not gemini_api_key:
+        print("Health check: No Gemini API key found in headers or environment.")
+        return jsonify({"status": "error", "message": "Gemini API key not found in X-Gemini-API-Key header or GEMINI_API_KEY environment variable."}), 401
+    
+    print(f"Health check: Attempting to configure Gemini with key: {gemini_api_key[:5]}...{gemini_api_key[-4:] if len(gemini_api_key) > 9 else ''}")
+    try:
+        genai.configure(api_key=gemini_api_key)
+        print("Health check: Gemini SDK configured successfully.")
+        return jsonify({"status": "success", "message": "Gemini API key configured successfully."})
+    except Exception as e:
+        error_message = f"Failed to configure Gemini SDK: {str(e)}"
+        print(f"Health check: {error_message}")
+        return jsonify({"status": "error", "message": "Failed to configure Gemini API key.", "details": str(e)}), 500
+
 @app.route('/api/chat', methods=['POST'])
 def chat():
     """Handle local LLM chat requests using Ollama"""
