@@ -33,8 +33,6 @@
   </a>
 </div>
 
-> **Note:** AI functionality may be limited on the live demo due to API key constraints.
-
 ## ✨ Key Features & Recent Enhancements
 
 
