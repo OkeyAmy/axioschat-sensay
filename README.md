@@ -28,7 +28,7 @@
 ### 🔗 Live Demo & Pitch
 
 <div align="center">
-  <a href="https://axioschat-r2jy.vercel.app/" target="_blank">
+  <a href="https://axioschat-sensay.vercel.app/" target="_blank">
     <img src="https://img.shields.io/badge/Try_AxiosChat-Live_Demo-4E56A6?style=for-the-badge&logo=vercel" alt="Live Demo" />
   </a>
 </div>
