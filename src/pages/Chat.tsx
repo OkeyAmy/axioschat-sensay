@@ -16,7 +16,7 @@ import WalletRequired from "@/components/WalletRequired"
 import { ArrowRight, Bot, MessageSquare, RotateCcw, Sparkles, Send, Command, CircleHelp } from "lucide-react"
 import TransactionQueue from "@/components/TransactionQueue"
 import useApiKeys from "@/hooks/useApiKeys"
-// Model selection removed; always use Gemini backend
+import ModelSelector from "@/components/ModelSelector"
 import { useLocation } from "react-router-dom"
 import {
   callLlama,
@@ -45,9 +45,9 @@ const Chat = () => {
   const [input, setInput] = useState("")
   const [messages, setMessages] = useState<Message[]>([])
   const [functionCalls, setFunctionCalls] = useState<FunctionCall[]>([])
-  // Force Gemini usage; Sensay and local Llama disabled
-  const [useOpenAI, setUseOpenAI] = useState(true)
-  const [useSensay, setUseSensay] = useState(false)
+  // Restore model selection defaults from main
+  const [useOpenAI, setUseOpenAI] = useState(false)
+  const [useSensay, setUseSensay] = useState(true)
   const [activeChat, setActiveChat] = useState<number | null>(null)
   const [isHistoryPanelCollapsed, setIsHistoryPanelCollapsed] = useState(window.innerWidth < 1200)
   const [isPromptsPanelCollapsed, setIsPromptsPanelCollapsed] = useState(window.innerWidth < 1400)
@@ -58,8 +58,7 @@ const Chat = () => {
 
   const [showEndpointSettings, setShowEndpointSettings] = useState(false)
   const { apiKeys, updateApiKey, isLoaded } = useApiKeys()
-  // Frontend no longer requires any API keys; backend uses env vars
-  const replicateApiKey = "__backend__"
+  const replicateApiKey = apiKeys.replicate || ""
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
@@ -187,7 +186,7 @@ DO NOT make up any blockchain data. ONLY identify if a function call is needed.`
         try {
           detectionResponse = await callOpenAI(
             {
-              model: "gemini-2.5-flash",
+              model: "gemini-2.0-flash",
               messages: conversationalMessages,
               temperature: 0.7,
               top_p: 0.9,
@@ -228,7 +227,7 @@ DO NOT make up any blockchain data. ONLY identify if a function call is needed.`
           // Use Gemini directly; backend holds the key
           try {
             llamaResponse = await callOpenAI({
-              model: "gemini-2.5-flash",
+              model: "gemini-2.0-flash",
               messages: conversationalMessages,
               temperature: 0.7,
               top_p: 0.9,
@@ -395,7 +394,7 @@ Be concise and direct. Don't just repeat the raw data - explain its significance
 
                 if (useOpenAI) {
                   interpretationResponse = await callOpenAI({
-                    model: "gemini-2.5-flash",
+                    model: "gemini-2.0-flash",
                     messages: interpretationMessages,
                     temperature: 0.7,
                     top_p: 0.9,
@@ -958,7 +957,21 @@ Please explain what this result means for the user in a concise and helpful way.
               </div>
               <div className="border-t p-4 md:p-5 flex-shrink-0 bg-white dark:bg-gray-800 rounded-b-xl shadow-inner relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-gray-700 dark:to-gray-800 opacity-20 pointer-events-none"></div>
-                {/* Model selection UI removed per requirements */}
+                <ModelSelector
+                  useOpenAI={useOpenAI}
+                  onUseOpenAIChange={setUseOpenAI}
+                  showSettings={showEndpointSettings}
+                  onShowSettingsChange={setShowEndpointSettings}
+                  openaiApiKey={apiKeys.openai || ""}
+                  onOpenAIApiKeyChange={(key) => updateApiKey("openai", key)}
+                  sensayApiKey={apiKeys.sensay || ""}
+                  onSensayApiKeyChange={(key) => updateApiKey("sensay", key)}
+                  className="mb-4 relative z-10"
+                  debugMode={debugMode}
+                  onDebugModeChange={setDebugMode}
+                  useSensay={useSensay}
+                  setUseSensay={setUseSensay}
+                />
                 <ErrorBoundary>
                   <form onSubmit={(e) => { e.preventDefault(); if (input.trim()) handleSubmit(e); }} className="flex items-center space-x-3 relative z-10">
                     <Input

@@ -180,10 +180,10 @@ def gemini_functions_proxy():
     
     # Get the query and tools from the request
     query = request.json.get('query')
-    tools_json_string = request.json.get('tools')  # Expected as JSON string from createDefaultWeb3Tools; optional
-    
-    # Default to lightweight model for lower latency/cost
-    model_name = request.json.get('model', 'models/gemini-2.5-flash-lite')
+    tools_json_string = request.json.get('tools')  # Expected as JSON string from createDefaultWeb3Tools
+
+    # main branch default model for function calling
+    model_name = request.json.get('model', 'gemini-2.0-flash')
     
     temperature = request.json.get('temperature', 0.7)
     top_p = request.json.get('top_p')  # Gemini supports top_p
@@ -191,9 +191,8 @@ def gemini_functions_proxy():
     
     if not query:
         return jsonify({"error": "Parameter 'query' is required"}), 400
-    # Allow text-only conversations if tools are absent
     if not tools_json_string:
-        tools_json_string = "[]"
+        return jsonify({"error": "Parameter 'tools' (JSON string) is required"}), 400
     
     # Enhanced debugging for function calling issues
     print(f"Gemini API request details:")
