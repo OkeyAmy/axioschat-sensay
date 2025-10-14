@@ -28,7 +28,7 @@ import {
 } from "lucide-react"
 import SuggestedPromptsPanel from "@/components/SuggestedPromptsPanel"
 import TransactionQueue from "@/components/TransactionQueue"
-import { cn } from "@/lib/utils"
+import { cn, useAB } from "@/lib/utils"
 import useApiKeys from "@/hooks/useApiKeys"
 import { toast } from "@/components/ui/use-toast"
 import FunctionQueue from "@/components/FunctionQueue"
@@ -71,6 +71,7 @@ type Message = {
 
 const Web3Intro: React.FC = () => {
   const { address, isConnected } = useAccount()
+  const variant = useAB('/learn')
   const [messageInput, setMessageInput] = useState("")
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: "Welcome to Web3 Intro! What would you like to learn about DeFi today?" },

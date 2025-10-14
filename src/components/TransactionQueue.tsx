@@ -175,13 +175,37 @@ const TransactionQueue: React.FC<TransactionQueueProps> = ({
     )
   }
 
-  // Default floating version - only show if there are transactions
-  if (queue.length === 0) return null
+  // Default floating version - show when there are transactions or pending function approvals (if provided)
+  const hasFunctionApprovals = functionCalls && functionCalls.some(fc => fc.status === 'pending') && onFunctionStatusChange
+  if (queue.length === 0 && !hasFunctionApprovals) return null
 
   return (
-    <div className={cn("fixed bottom-4 right-4 z-50 w-80 max-w-[calc(100vw-2rem)]", className)}>
-      <ScrollArea className="max-h-[60vh]">
-        <div className="flex flex-col gap-2 p-1">
+    <div className={cn("fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[min(96vw,720px)]", className)}>
+      <ScrollArea className="max-h-[50vh]">
+        <div className="flex flex-col gap-2 p-2">
+          {hasFunctionApprovals && (
+            <Card className="border-amber-500/30 bg-amber-500/5">
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm font-medium">Action required</div>
+                  <div className="text-xs text-muted-foreground">Approve to continue</div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {functionCalls.filter(fc => fc.status === 'pending').map(fc => (
+                    <div key={fc.id} className="text-xs p-2 rounded border bg-card/90 flex items-center gap-2">
+                      <span className="font-medium truncate max-w-[160px]">{fc.name}</span>
+                      <Button variant="ghost" size="sm" className="h-6 px-2" onClick={() => onFunctionStatusChange && onFunctionStatusChange(fc.id, 'approved')}>
+                        Approve
+                      </Button>
+                      <Button variant="ghost" size="sm" className="h-6 px-2" onClick={() => onFunctionStatusChange && onFunctionStatusChange(fc.id, 'rejected')}>
+                        Reject
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
           {queue.map((tx) => (
             <Card
               key={tx.id}

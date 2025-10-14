@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { useNavigate } from "react-router-dom"
 import Header from "@/components/Header"
-import { cn } from "@/lib/utils"
+import { cn, useAB } from "@/lib/utils"
 import { motion } from 'framer-motion'
 
 const Landing = () => {
@@ -24,6 +24,8 @@ const Landing = () => {
   const handleGetStarted = () => {
     navigate("/chat")
   }
+
+  const variant = useAB('/landing')
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-background via-background to-background/95">
@@ -51,7 +53,7 @@ const Landing = () => {
             transition={{ duration: 1 }}
             className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent"
           >
-            AxiosChat
+            {variant === 'A' ? 'Learn Web3 Faster with AI' : 'AI Tutor for Web3 Newbies'}
           </motion.h1>
           <motion.p
             initial={{ y: 20, opacity: 0 }}
@@ -59,10 +61,9 @@ const Landing = () => {
             transition={{ duration: 1, delay: 0.3 }}
             className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl"
           >
-            The next generation of Web3 conversational AI, powered by{' '}
-            <span className="font-semibold bg-gradient-to-r from-fuchsia-500 to-pink-500 bg-clip-text text-transparent">Sensay AI Network</span>{' '}
-            with{' '}
-            <span className="font-semibold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">Gemini 2.0</span> fallback.
+            {variant === 'A'
+              ? 'AI that helps you learn Web3 fast. Ask, explore, execute.'
+              : 'Learn Web3 with an AI tutor. Short, practical answers—no fluff.'}
           </motion.p>
           <div className="flex gap-4 mb-8">
             <Button onClick={handleGetStarted} className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl shadow-md hover:opacity-90">
@@ -236,14 +237,14 @@ const Landing = () => {
                 <div>
                   <h3 className="text-2xl font-semibold mb-4 bg-gradient-to-r from-indigo-400 to-purple-500 bg-clip-text text-transparent">System Interaction Flow</h3>
                   <p className="text-muted-foreground mb-4">
-                    AxiosChat uses the Sensay AI Network to interpret user queries, generate Web3 function calls, execute them, and deliver results seamlessly.
+                    AxiosChat interprets your questions, decides if tools are needed, and delivers concise answers with optional on-chain data.
                   </p>
-                  <div className="space-y-3">
-                    <BlockchainStep number="01" title="User Query" description="User sends a question about Web3 via the chat interface." />
-                    <BlockchainStep number="02" title="Sensay Processing" description="Sensay AI processes the system prompt and user context to understand the request." />
-                    <BlockchainStep number="03" title="Function Call Generation" description="Sensay generates Web3 function calls (e.g., get_token_balance) with parameters." />
-                    <BlockchainStep number="04" title="Execution & Response" description="The system executes approved calls and returns results to the user." />
-                  </div>
+          <div className="space-y-3">
+            <BlockchainStep number="01" title="User Query" description="User asks a Web3 question in plain English." />
+            <BlockchainStep number="02" title="AI Understanding" description="The AI interprets intent and decides if tools are needed." />
+            <BlockchainStep number="03" title="Tool Use (if needed)" description="It generates Web3 function calls (e.g., get_token_balance)." />
+            <BlockchainStep number="04" title="Answer" description="You get a clear answer, with optional on-chain data." />
+          </div>
                 </div>
                 <div className="relative h-64 md:h-80 flex items-center justify-center">
                   <BlockchainVisualization />

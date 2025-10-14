@@ -10,7 +10,7 @@ import SuggestedPromptsPanel from "@/components/SuggestedPromptsPanel"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/use-toast"
-import { cn } from "@/lib/utils"
+import { cn, useAB } from "@/lib/utils"
 import { useAccount } from "wagmi"
 import WalletRequired from "@/components/WalletRequired"
 import { ArrowRight, Bot, MessageSquare, RotateCcw, Sparkles, Send, Command, CircleHelp } from "lucide-react"
@@ -39,6 +39,7 @@ type Message = {
 }
 
 const Chat = () => {
+  const variant = useAB('/chat')
   const { isConnected, address } = useAccount()
   const [loading, setLoading] = useState(false)
   const [input, setInput] = useState("")
@@ -338,7 +339,6 @@ DO NOT make up any blockchain data. ONLY identify if a function call is needed.`
             // If it's a read-only function, execute it directly
             if (isReadOnlyFunction(functionCall.name)) {
                   console.log("Auto-executing read-only function");
-
               try {
                     const result = await executeFunctionCall(functionCall);
                     console.log("Function execution result:", result);
@@ -482,20 +482,19 @@ Be concise and direct. Don't just repeat the raw data - explain its significance
                     );
               }
             } else {
-              // For non-read-only functions, add to queue for approval
-                  console.log("Adding function to queue for approval");
-
-              // Update the processing message
+              // For non-read-only functions, show bottom approval pop
               setMessages((prevMessages) =>
                 prevMessages.map((msg) =>
                   msg.id === processingId
                     ? {
                         ...msg,
-                        content: `I need your approval to execute the ${functionCall.name} function. Please check the transaction queue.`,
+                        content: `Action required: approve ${functionCall.name} below to continue.`,
                       }
                     : msg,
                 ),
-                  );
+              );
+              // Add to queue
+              setFunctionCalls((prev) => [...prev, functionCall])
             }
               } else {
                 // No function calls returned
