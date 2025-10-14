@@ -35,7 +35,8 @@ export default async function handler(req: NextRequest) {
     }
 
     // Get the API token from the headers
-    const apiToken = req.headers.get('X-Gemini-API-Key');
+    // Prefer header; fallback to environment on the server
+    const apiToken = req.headers.get('X-Gemini-API-Key') || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
     if (!apiToken) {
       console.error('Missing Gemini API key in headers');
       return new Response(JSON.stringify({

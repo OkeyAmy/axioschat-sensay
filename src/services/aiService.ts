@@ -104,7 +104,7 @@ export async function callLlama(options: LlamaOptions, endpoint: string, useSens
 
       // Call OpenAI function which now uses Gemini API
       return await callOpenAI({
-        model: "gemini-2.0-flash",
+        model: "gemini-2.5-flash",
         messages: options.messages,
         temperature: options.temperature,
         top_p: options.top_p,
@@ -162,10 +162,6 @@ export async function callOpenAI(options: OpenAIOptions, useSensay: boolean = fa
   
   try {
     const { gemini: GEMINI_API_KEY } = getApiTokens();
-    
-    if (!GEMINI_API_KEY) {
-      return "Please provide a Gemini API key in the settings to use the chatbot.";
-    }
 
     // Convert our message format to OpenAI SDK format
     const formattedMessages = options.messages.map(msg => {
@@ -184,13 +180,13 @@ export async function callOpenAI(options: OpenAIOptions, useSensay: boolean = fa
 
     // Create request body
     const requestBody = {
-      model: "gemini-2.0-flash",
+      model: "gemini-2.5-flash",
       messages: formattedMessages,
       temperature: options.temperature || 0.7,
       max_tokens: options.max_tokens || 2000,
     };
 
-    console.log("Calling Gemini API via proxy with key:", GEMINI_API_KEY ? "API key exists" : "No API key");
+    console.log("Calling Gemini API via proxy (env-backed):", GEMINI_API_KEY ? "header set" : "using server env");
 
     // Use both proxy endpoints with fallback
     try {
@@ -199,7 +195,7 @@ export async function callOpenAI(options: OpenAIOptions, useSensay: boolean = fa
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Gemini-API-Key": GEMINI_API_KEY,
+          ...(GEMINI_API_KEY ? { "X-Gemini-API-Key": GEMINI_API_KEY } : {}),
         },
         body: JSON.stringify(requestBody)
       });
@@ -223,7 +219,7 @@ export async function callOpenAI(options: OpenAIOptions, useSensay: boolean = fa
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Gemini-API-Key": GEMINI_API_KEY,
+          ...(GEMINI_API_KEY ? { "X-Gemini-API-Key": GEMINI_API_KEY } : {}),
         },
         body: JSON.stringify(requestBody)
       });

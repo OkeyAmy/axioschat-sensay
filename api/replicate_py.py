@@ -3,10 +3,12 @@ import requests
 import os
 import json
 from flask_cors import CORS
+from dotenv import load_dotenv
 import time
 # Add import for Google Generative AI SDK
 import google.generativeai as genai
 
+load_dotenv()  # Load variables from .env if present
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
@@ -146,7 +148,8 @@ def gemini_functions_proxy():
     print(f"Raw Request Body (first 500 chars): {raw_body[:500]}")
 
     header_api_key = request.headers.get('X-Gemini-API-Key')
-    env_api_key = os.environ.get('GEMINI_API_KEY')
+    # Support both GEMINI_API_KEY and GOOGLE_API_KEY for Render/Google compatibility
+    env_api_key = os.environ.get('GEMINI_API_KEY') or os.environ.get('GOOGLE_API_KEY')
     
     print(f"Extracted Header X-Gemini-API-Key: '{header_api_key}' (Type: {type(header_api_key)})")
     
@@ -177,10 +180,10 @@ def gemini_functions_proxy():
     
     # Get the query and tools from the request
     query = request.json.get('query')
-    tools_json_string = request.json.get('tools')  # Expected as JSON string from createDefaultWeb3Tools
+    tools_json_string = request.json.get('tools')  # Expected as JSON string from createDefaultWeb3Tools; optional
     
-    # User has specified gemini-2.0-flash as the model to use
-    model_name = request.json.get('model', 'gemini-2.0-flash')
+    # Default to gemini-2.5-flash per product decision
+    model_name = request.json.get('model', 'gemini-2.5-flash')
     
     temperature = request.json.get('temperature', 0.7)
     top_p = request.json.get('top_p')  # Gemini supports top_p
@@ -188,8 +191,9 @@ def gemini_functions_proxy():
     
     if not query:
         return jsonify({"error": "Parameter 'query' is required"}), 400
+    # Allow text-only conversations if tools are absent
     if not tools_json_string:
-        return jsonify({"error": "Parameter 'tools' (JSON string) is required"}), 400
+        tools_json_string = "[]"
     
     # Enhanced debugging for function calling issues
     print(f"Gemini API request details:")
@@ -215,11 +219,12 @@ def gemini_functions_proxy():
                 function_declarations.append(declaration)
                 print(f"Added function declaration: {func_details['name']}")
         
+        # If no function declarations, proceed without tools (text-only)
         if not function_declarations:
-            return jsonify({"error": "No valid function declarations found in 'tools'"}), 400
-        
-        # Gemini expects a Tool object containing the list of function declarations
-        gemini_tool_config = [genai.types.Tool(function_declarations=function_declarations)]
+            gemini_tool_config = []
+        else:
+            # Gemini expects a Tool object containing the list of function declarations
+            gemini_tool_config = [genai.types.Tool(function_declarations=function_declarations)]
         print(f"Created tool config with {len(function_declarations)} function declarations")
     
     except json.JSONDecodeError:
@@ -359,7 +364,7 @@ def gemini_health_check():
     Health check endpoint to verify Gemini API key configuration.
     """
     print("Received request for /api/gemini_health")
-    gemini_api_key = request.headers.get('X-Gemini-API-Key') or os.environ.get('GEMINI_API_KEY')
+    gemini_api_key = request.headers.get('X-Gemini-API-Key') or os.environ.get('GEMINI_API_KEY') or os.environ.get('GOOGLE_API_KEY')
     
     if not gemini_api_key:
         print("Health check: No Gemini API key found in headers or environment.")

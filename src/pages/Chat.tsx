@@ -16,7 +16,7 @@ import WalletRequired from "@/components/WalletRequired"
 import { ArrowRight, Bot, MessageSquare, RotateCcw, Sparkles, Send, Command, CircleHelp } from "lucide-react"
 import TransactionQueue from "@/components/TransactionQueue"
 import useApiKeys from "@/hooks/useApiKeys"
-import ModelSelector from "@/components/ModelSelector"
+// Model selection removed; always use Gemini backend
 import { useLocation } from "react-router-dom"
 import {
   callLlama,
@@ -45,8 +45,9 @@ const Chat = () => {
   const [input, setInput] = useState("")
   const [messages, setMessages] = useState<Message[]>([])
   const [functionCalls, setFunctionCalls] = useState<FunctionCall[]>([])
-  const [useOpenAI, setUseOpenAI] = useState(false)
-  const [useSensay, setUseSensay] = useState(true)
+  // Force Gemini usage; Sensay and local Llama disabled
+  const [useOpenAI, setUseOpenAI] = useState(true)
+  const [useSensay, setUseSensay] = useState(false)
   const [activeChat, setActiveChat] = useState<number | null>(null)
   const [isHistoryPanelCollapsed, setIsHistoryPanelCollapsed] = useState(window.innerWidth < 1200)
   const [isPromptsPanelCollapsed, setIsPromptsPanelCollapsed] = useState(window.innerWidth < 1400)
@@ -57,7 +58,8 @@ const Chat = () => {
 
   const [showEndpointSettings, setShowEndpointSettings] = useState(false)
   const { apiKeys, updateApiKey, isLoaded } = useApiKeys()
-  const replicateApiKey = apiKeys.replicate || ""
+  // Frontend no longer requires any API keys; backend uses env vars
+  const replicateApiKey = "__backend__"
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
@@ -185,7 +187,7 @@ DO NOT make up any blockchain data. ONLY identify if a function call is needed.`
         try {
           detectionResponse = await callOpenAI(
             {
-              model: "gemini-2.0-flash",
+              model: "gemini-2.5-flash",
               messages: conversationalMessages,
               temperature: 0.7,
               top_p: 0.9,
@@ -223,25 +225,19 @@ DO NOT make up any blockchain data. ONLY identify if a function call is needed.`
           }
         }
       } else if (useOpenAI) {
-          // Use Gemini
-        if (!apiKeys.openai) {
-            llamaResponse = "Please provide a Gemini API key in the settings to use the chatbot.";
-        } else {
-            try {
-          llamaResponse = await callOpenAI({
-                model: "gemini-2.0-flash",
-            messages: conversationalMessages,
-            temperature: 0.7,
-            top_p: 0.9,
-            max_tokens: 2000,
-              },
-              false // Set useSensay to false
-            );
-            } catch (error) {
-              console.error("Error calling OpenAI:", error);
-              llamaResponse = "Sorry, I'm having trouble connecting to the AI service. Please try again in a moment.";
-            }
-        }
+          // Use Gemini directly; backend holds the key
+          try {
+            llamaResponse = await callOpenAI({
+              model: "gemini-2.5-flash",
+              messages: conversationalMessages,
+              temperature: 0.7,
+              top_p: 0.9,
+              max_tokens: 2000,
+            }, false)
+          } catch (error) {
+            console.error("Error calling OpenAI:", error)
+            llamaResponse = "Sorry, I'm having trouble connecting to the AI service. Please try again in a moment."
+          }
       } else {
         // Use Llama
           try {
@@ -300,9 +296,7 @@ DO NOT make up any blockchain data. ONLY identify if a function call is needed.`
             setExecutingFunction(true);
 
           // Check if Replicate API key is available
-          if (!replicateApiKey) {
-              throw new Error("Gemini API key is required to use the function calling feature");
-          }
+          // Do not enforce frontend key gate; backend loads key from env
 
           // Get the tools JSON
             const tools = createDefaultWeb3Tools();
@@ -335,7 +329,7 @@ DO NOT make up any blockchain data. ONLY identify if a function call is needed.`
                 throw new Error(flockResponse.error);
           }
 
-          if (flockResponse.functionCalls && flockResponse.functionCalls.length > 0) {
+              if (flockResponse.functionCalls && flockResponse.functionCalls.length > 0) {
             // We got function calls from Flock Web3
                 const functionCall = flockResponse.functionCalls[0];
                 console.log("Function call from Flock Web3:", functionCall);
@@ -400,17 +394,13 @@ Be concise and direct. Don't just repeat the raw data - explain its significance
                     let interpretationResponse: string;
 
                 if (useOpenAI) {
-                    if (!apiKeys.openai) {
-                        interpretationResponse = generateFallbackResponse(functionCall, result);
-                    } else {
-                        interpretationResponse = await callOpenAI({
-                            model: "gemini-2.0-flash",
-                            messages: interpretationMessages,
-                            temperature: 0.7,
-                            top_p: 0.9,
-                            max_tokens: 2000,
-                        });
-                    }
+                  interpretationResponse = await callOpenAI({
+                    model: "gemini-2.5-flash",
+                    messages: interpretationMessages,
+                    temperature: 0.7,
+                    top_p: 0.9,
+                    max_tokens: 2000,
+                  })
                 } else if (useSensay) {
                     interpretationResponse = await callLlama(
                         {
@@ -662,18 +652,14 @@ Please explain what this result means for the user in a concise and helpful way.
         // Call the Llama model again to interpret the result
         let interpretationResponse: string
 
-        if (useOpenAI) {
-          if (!apiKeys.openai) {
-            interpretationResponse = generateFallbackResponse(func, result)
-          } else {
-            interpretationResponse = await callOpenAI({
-              model: "gemini-2.0-flash",
-              messages: interpretationMessages,
-              temperature: 0.7,
-              top_p: 0.9,
-              max_tokens: 2000,
-            })
-          }
+                if (useOpenAI) {
+                  interpretationResponse = await callOpenAI({
+                    model: "gemini-2.5-flash",
+                    messages: interpretationMessages,
+                    temperature: 0.7,
+                    top_p: 0.9,
+                    max_tokens: 2000,
+                  })
         } else if (useSensay) {
           interpretationResponse = await callLlama(
             {
@@ -972,21 +958,7 @@ Please explain what this result means for the user in a concise and helpful way.
               </div>
               <div className="border-t p-4 md:p-5 flex-shrink-0 bg-white dark:bg-gray-800 rounded-b-xl shadow-inner relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-gray-700 dark:to-gray-800 opacity-20 pointer-events-none"></div>
-                <ModelSelector
-                  useOpenAI={useOpenAI}
-                  onUseOpenAIChange={setUseOpenAI}
-                  showSettings={showEndpointSettings}
-                  onShowSettingsChange={setShowEndpointSettings}
-                  openaiApiKey={apiKeys.openai || ""}
-                  onOpenAIApiKeyChange={(key) => updateApiKey("openai", key)}
-                  sensayApiKey={apiKeys.sensay || ""}
-                  onSensayApiKeyChange={(key) => updateApiKey("sensay", key)}
-                  className="mb-4 relative z-10"
-                  debugMode={debugMode}
-                  onDebugModeChange={setDebugMode}
-                  useSensay={useSensay}
-                  setUseSensay={setUseSensay}
-                />
+                {/* Model selection UI removed per requirements */}
                 <ErrorBoundary>
                   <form onSubmit={(e) => { e.preventDefault(); if (input.trim()) handleSubmit(e); }} className="flex items-center space-x-3 relative z-10">
                     <Input

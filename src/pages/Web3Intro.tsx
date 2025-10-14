@@ -31,7 +31,6 @@ import TransactionQueue from "@/components/TransactionQueue"
 import { cn } from "@/lib/utils"
 import useApiKeys from "@/hooks/useApiKeys"
 import { toast } from "@/components/ui/use-toast"
-import ModelSelector from "@/components/ModelSelector"
 import FunctionQueue from "@/components/FunctionQueue"
 import { useAccount } from "wagmi"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -81,13 +80,13 @@ const Web3Intro: React.FC = () => {
   const [isHistoryCollapsed, setIsHistoryCollapsed] = useState(window.innerWidth < 1200)
   const [isSuggestionsCollapsed, setIsSuggestionsCollapsed] = useState(window.innerWidth < 1400)
   const [isProcessing, setIsProcessing] = useState(false)
-  const [useLocalAI, setUseLocalAI] = useState(true)
+  const [useLocalAI, setUseLocalAI] = useState(false)
   const [localEndpoint, setLocalEndpoint] = useState("http://localhost:11434")
   const [showEndpointSettings, setShowEndpointSettings] = useState(false)
   const [currentChain, setCurrentChain] = useState(1)
   const { apiKeys, updateApiKey } = useApiKeys()
   const [showFunctionMessages, setShowFunctionMessages] = useState(false)
-  const [useSensay, setUseSensay] = useState(true)
+  const [useSensay, setUseSensay] = useState(false)
 
   const defiSections: DeFiSection[] = [
     {
@@ -636,10 +635,8 @@ Use this context to answer any user questions about Sensay or Cyberscope compreh
             aiResponse = `I couldn't connect to the local model. ${error instanceof Error ? error.message : "Unknown error"}`
           }
         } else {
-          // Similar changes for Gemini...
-          if (!apiKeys.openai) {
-            aiResponse = "Please provide a Gemini API key in the settings to use the chatbot."
-          } else {
+          // Gemini path (backend will use env API key)
+          {
             // Prepare messages for Gemini
             const conversationalMessages: ChatMessage[] = messages
               .filter((m) => m.role !== "function") // Filter out function messages for the initial query
@@ -665,7 +662,7 @@ Use this context to answer any user questions about Sensay or Cyberscope compreh
 
             // Call Gemini
             aiResponse = await callOpenAI({
-              model: "gemini-2.0-flash",
+              model: "gemini-2.5-flash",
               messages: conversationalMessages,
               temperature: 0.7,
               top_p: 0.9,
@@ -1184,20 +1181,6 @@ Be concise but informative. Don't just repeat the raw data - explain its signifi
 
           <div className="border-t p-4 bg-background">
             <div className="max-w-3xl mx-auto">
-            <ModelSelector
-              useOpenAI={!useLocalAI}
-              onUseOpenAIChange={(value) => setUseLocalAI(!value)}
-              showSettings={showEndpointSettings}
-              onShowSettingsChange={setShowEndpointSettings}
-              openaiApiKey={apiKeys.openai || ""}
-              onOpenAIApiKeyChange={(key) => updateApiKey("openai", key)}
-                  sensayApiKey={apiKeys.sensay || ""}
-                  onSensayApiKeyChange={(key) => updateApiKey("sensay", key)}
-                  useSensay={useSensay}
-                  setUseSensay={setUseSensay}
-              className="mb-3"
-            />
-
             <div className="flex gap-2">
               <Textarea
                 value={messageInput}

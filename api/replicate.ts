@@ -18,7 +18,7 @@ export default async function handler(req: NextRequest) {
     }
 
     // Get the API token from the headers
-    const apiToken = req.headers.get('X-Replicate-API-Token');
+    const apiToken = req.headers.get('X-Replicate-API-Token') || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
     if (!apiToken) {
       return NextResponse.json(
         { error: 'Gemini API token is required' },
@@ -66,7 +66,7 @@ export default async function handler(req: NextRequest) {
 
     // Call Gemini API through OpenAI compatibility layer
     const response = await openai.chat.completions.create({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.5-flash',
       messages: [
         {
           role: 'system',

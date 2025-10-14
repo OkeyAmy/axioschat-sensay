@@ -20,10 +20,9 @@ const getGeminiApiToken = (): string => {
   } catch (error) {
     console.error("Error retrieving Gemini API token from localStorage:", error)
   }
-  // Fallback to environment variables if not found in localStorage
+  // Do not rely on frontend env in production; backend reads .env. Keep as optional fallback for dev.
   if (!token) {
     token = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.NEXT_PUBLIC_GEMINI_API_KEY || ""
-    if (token) console.log("Using Gemini API key from environment variable")
   }
   return token
 }
@@ -49,7 +48,7 @@ export const callGeminiForFunctions = async (
       top_p: input.top_p || 0.9,
       temperature: input.temperature || 0.7,
       max_output_tokens: input.max_output_tokens || 3000,
-      model: "gemini-2.0-flash" // Using a Gemini model with reliable function calling capability
+      model: "gemini-2.5-flash"
     }
 
     console.log("Request body:", JSON.stringify(requestBody, null, 2))
