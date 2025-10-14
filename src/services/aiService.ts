@@ -162,10 +162,7 @@ export async function callOpenAI(options: OpenAIOptions, useSensay: boolean = fa
   
   try {
     const { gemini: GEMINI_API_KEY } = getApiTokens();
-    
-    if (!GEMINI_API_KEY) {
-      return "Please provide a Gemini API key in the settings to use the chatbot.";
-    }
+    // If no key in localStorage, allow proxies to supply from server env
 
     // Convert our message format to OpenAI SDK format
     const formattedMessages = options.messages.map(msg => {
@@ -199,7 +196,7 @@ export async function callOpenAI(options: OpenAIOptions, useSensay: boolean = fa
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Gemini-API-Key": GEMINI_API_KEY,
+          ...(GEMINI_API_KEY ? { "X-Gemini-API-Key": GEMINI_API_KEY } : {}),
         },
         body: JSON.stringify(requestBody)
       });
@@ -223,7 +220,7 @@ export async function callOpenAI(options: OpenAIOptions, useSensay: boolean = fa
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Gemini-API-Key": GEMINI_API_KEY,
+          ...(GEMINI_API_KEY ? { "X-Gemini-API-Key": GEMINI_API_KEY } : {}),
         },
         body: JSON.stringify(requestBody)
       });

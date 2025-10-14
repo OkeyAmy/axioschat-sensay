@@ -16,7 +16,6 @@ import WalletRequired from "@/components/WalletRequired"
 import { ArrowRight, Bot, MessageSquare, RotateCcw, Sparkles, Send, Command, CircleHelp } from "lucide-react"
 import TransactionQueue from "@/components/TransactionQueue"
 import useApiKeys from "@/hooks/useApiKeys"
-import ModelSelector from "@/components/ModelSelector"
 import { useLocation } from "react-router-dom"
 import {
   callLlama,
@@ -45,9 +44,9 @@ const Chat = () => {
   const [input, setInput] = useState("")
   const [messages, setMessages] = useState<Message[]>([])
   const [functionCalls, setFunctionCalls] = useState<FunctionCall[]>([])
-  // Restore model selection defaults from main
-  const [useOpenAI, setUseOpenAI] = useState(false)
-  const [useSensay, setUseSensay] = useState(true)
+  // Gemini-only mode; no Sensay or local Llama selection
+  const [useOpenAI, setUseOpenAI] = useState(true)
+  const [useSensay, setUseSensay] = useState(false)
   const [activeChat, setActiveChat] = useState<number | null>(null)
   const [isHistoryPanelCollapsed, setIsHistoryPanelCollapsed] = useState(window.innerWidth < 1200)
   const [isPromptsPanelCollapsed, setIsPromptsPanelCollapsed] = useState(window.innerWidth < 1400)
@@ -58,7 +57,7 @@ const Chat = () => {
 
   const [showEndpointSettings, setShowEndpointSettings] = useState(false)
   const { apiKeys, updateApiKey, isLoaded } = useApiKeys()
-  const replicateApiKey = apiKeys.replicate || ""
+  const replicateApiKey = ""
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
@@ -957,21 +956,7 @@ Please explain what this result means for the user in a concise and helpful way.
               </div>
               <div className="border-t p-4 md:p-5 flex-shrink-0 bg-white dark:bg-gray-800 rounded-b-xl shadow-inner relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-gray-700 dark:to-gray-800 opacity-20 pointer-events-none"></div>
-                <ModelSelector
-                  useOpenAI={useOpenAI}
-                  onUseOpenAIChange={setUseOpenAI}
-                  showSettings={showEndpointSettings}
-                  onShowSettingsChange={setShowEndpointSettings}
-                  openaiApiKey={apiKeys.openai || ""}
-                  onOpenAIApiKeyChange={(key) => updateApiKey("openai", key)}
-                  sensayApiKey={apiKeys.sensay || ""}
-                  onSensayApiKeyChange={(key) => updateApiKey("sensay", key)}
-                  className="mb-4 relative z-10"
-                  debugMode={debugMode}
-                  onDebugModeChange={setDebugMode}
-                  useSensay={useSensay}
-                  setUseSensay={setUseSensay}
-                />
+                {/* Model selection removed: Gemini-only */}
                 <ErrorBoundary>
                   <form onSubmit={(e) => { e.preventDefault(); if (input.trim()) handleSubmit(e); }} className="flex items-center space-x-3 relative z-10">
                     <Input
