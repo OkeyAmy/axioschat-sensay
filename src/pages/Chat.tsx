@@ -994,6 +994,13 @@ Please explain what this result means for the user in a concise and helpful way.
           </ErrorBoundary>
         )}
       </main>
+      {isHistoryPanelCollapsed && (
+        <TransactionQueue
+          chainId={currentChain}
+          functionCalls={functionCalls}
+          onFunctionStatusChange={handleFunctionStatusChange}
+        />
+      )}
     </div>
   )
 }
