@@ -161,83 +161,36 @@ export async function callOpenAI(options: OpenAIOptions, useSensay: boolean = fa
   }
   
   try {
-    const { gemini: GEMINI_API_KEY } = getApiTokens();
+    // Route chat through backend Render endpoint for stable env/key management
+    // Convert messages to a single query string
+    const query = options.messages
+      .map(m => `${m.role.toUpperCase()}: ${m.content}`)
+      .join("\n\n");
 
-    // Convert our message format to OpenAI SDK format
-    const formattedMessages = options.messages.map(msg => {
-      if (msg.role === "function") {
-        return {
-          role: msg.role,
-          name: msg.name || "function", // Function messages must have a name
-          content: msg.content
-        };
-      }
-      return {
-        role: msg.role,
-        content: msg.content
-      };
+    const response = await fetch("/api/gemini_functions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query,
+        tools: "[]",
+        model: "gemini-2.5-flash",
+        temperature: options.temperature || 0.7,
+        max_output_tokens: options.max_tokens || 2000,
+      }),
     });
 
-    // Create request body
-    const requestBody = {
-      model: "gemini-2.5-flash",
-      messages: formattedMessages,
-      temperature: options.temperature || 0.7,
-      max_tokens: options.max_tokens || 2000,
-    };
-
-    console.log("Calling Gemini API via proxy (env-backed):", GEMINI_API_KEY ? "header set" : "using server env");
-
-    // Use both proxy endpoints with fallback
-    try {
-      // First try with proxy-gemini endpoint
-      const response = await fetch("/api/proxy-gemini", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(GEMINI_API_KEY ? { "X-Gemini-API-Key": GEMINI_API_KEY } : {}),
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to call proxy-gemini: ${errorText}`);
-      }
-
-      const data = await response.json();
-      if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-        return data.choices[0].message.content || "";
-      } else {
-        throw new Error("Invalid response format from proxy-gemini");
-      }
-    } catch (proxyError) {
-      console.warn("proxy-gemini failed, trying gemini-proxy:", proxyError);
-      
-      // Try with alternative gemini-proxy endpoint
-      const altResponse = await fetch("/api/gemini-proxy", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(GEMINI_API_KEY ? { "X-Gemini-API-Key": GEMINI_API_KEY } : {}),
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      if (!altResponse.ok) {
-        const errorText = await altResponse.text();
-        throw new Error(`Failed to call gemini-proxy: ${errorText}`);
-      }
-
-      const altData = await altResponse.json();
-      if (altData.choices && altData.choices.length > 0 && altData.choices[0].message) {
-        return altData.choices[0].message.content || "";
-      } else {
-        throw new Error("Invalid response format from gemini-proxy");
-      }
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`gemini_functions error ${response.status}: ${text}`);
     }
+
+    const data = await response.json();
+    if (typeof data.output === "string") return data.output;
+    if (Array.isArray(data.output) && data.text_if_any) return data.text_if_any;
+    if (data.text_if_any) return data.text_if_any;
+    return "No response text returned.";
   } catch (error) {
-    console.error("Error calling OpenAI:", error);
+    console.error("Error calling OpenAI via gemini_functions:", error);
     return `Error: ${error instanceof Error ? error.message : "Unknown error"}`;
   }
 }
