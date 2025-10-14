@@ -1,12 +1,10 @@
-import { NextRequest } from 'next/server';
-
 // This is a Vercel serverless function that acts as a proxy for Gemini API
 // to avoid CORS issues with browser-based requests
 export const config = {
   runtime: 'edge',
 };
 
-export default async function handler(req: NextRequest) {
+export default async function handler(req: Request) {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, {
