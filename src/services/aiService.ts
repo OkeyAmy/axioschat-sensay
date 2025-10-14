@@ -251,18 +251,9 @@ export const callFlockWeb3 = async (
   input: FlockWeb3Request,
 ): Promise<{ text?: string; error?: string; functionCalls?: FunctionCall[] } | string> => {
   try {
-    const { gemini: GEMINI_API_KEY } = getApiTokens()
+    // API key check is removed here; backend (Render) is responsible for using its env var.
 
-    if (!GEMINI_API_KEY) {
-      toast({
-        title: "API Token Missing",
-        description: "Please provide a Gemini API key in the settings",
-        variant: "destructive",
-      })
-      return { error: "Please provide a Gemini API key in the settings" }
-    }
-
-    console.log("Calling Gemini Functions API with input:", {
+    console.log("Calling Gemini Functions API (via callFlockWeb3) with input:", {
       query: input.query.substring(0, 50) + "...",
       temperature: input.temperature,
       top_p: input.top_p,

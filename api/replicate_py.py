@@ -128,19 +128,45 @@ def proxy_replicate():
 
 # NEW ENDPOINT FOR GEMINI FUNCTION CALLING
 @app.route('/api/gemini_functions', methods=['POST'])
-def proxy_gemini_functions():
+def gemini_functions_proxy():
     """
     This endpoint handles requests for Gemini function calling, replacing the Replicate FlockWeb3 model
     It converts OpenAI-style tools to Gemini's function declarations format and handles responses
     """
-    request_data = request.json
-    if not request_data:
-        return jsonify({"error": "Request body is required"}), 400
+    # --- Begin Enhanced Debug Logging ---
+    print("--- /api/gemini_functions (proxied) ---")
+    print(f"Request Method: {request.method}")
+    print(f"Request Path: {request.path}")
+    print("Incoming Headers:")
+    headers_dict = dict(request.headers)
+    for key, value in headers_dict.items():
+        print(f"  {key}: {value}")
     
-    # Get the Gemini API key from the headers or environment
-    gemini_api_key = request.headers.get('X-Gemini-API-Key') or os.environ.get('GEMINI_API_KEY')
+    raw_body = request.get_data(as_text=True)
+    print(f"Raw Request Body (first 500 chars): {raw_body[:500]}")
+
+    header_api_key = request.headers.get('X-Gemini-API-Key')
+    env_api_key = os.environ.get('GEMINI_API_KEY')
+    
+    print(f"Extracted Header X-Gemini-API-Key: '{header_api_key}' (Type: {type(header_api_key)})")
+    
+    env_key_display = env_api_key
+    if env_api_key and len(env_api_key) > 9:
+        env_key_display = f"{env_api_key[:5]}...{env_api_key[-4:]}"
+    print(f"Extracted Environment GEMINI_API_KEY: '{env_key_display}' (Type: {type(env_api_key)})")
+
+    gemini_api_key = header_api_key or env_api_key
+    
+    resolved_key_display = gemini_api_key
+    if gemini_api_key and len(gemini_api_key) > 9:
+        resolved_key_display = f"{gemini_api_key[:5]}...{gemini_api_key[-4:]}"
+    print(f"Resolved gemini_api_key for use: '{resolved_key_display}' (Type: {type(gemini_api_key)})")
+    print(f"Condition 'not gemini_api_key' (i.e., key is falsy): {not gemini_api_key}")
+    # --- End Enhanced Debug Logging ---
+
     if not gemini_api_key:
-        return jsonify({"error": "Gemini API key is required (set via header or GEMINI_API_KEY env var)"}), 401
+        print("Critical Failure: No Gemini API key resolved. gemini_api_key is falsy. Sending 401.")
+        return jsonify({"error": "Gemini API key is required to use the function calling feature"}), 401
     
     try:
         # Configure the Gemini SDK with the API key
@@ -150,15 +176,15 @@ def proxy_gemini_functions():
         return jsonify({"error": f"Failed to configure Gemini SDK: {str(e)}"}), 500
     
     # Get the query and tools from the request
-    query = request_data.get('query')
-    tools_json_string = request_data.get('tools')  # Expected as JSON string from createDefaultWeb3Tools
+    query = request.json.get('query')
+    tools_json_string = request.json.get('tools')  # Expected as JSON string from createDefaultWeb3Tools
     
     # User has specified gemini-2.0-flash as the model to use
-    model_name = request_data.get('model', 'gemini-2.0-flash')
+    model_name = request.json.get('model', 'gemini-2.0-flash')
     
-    temperature = request_data.get('temperature', 0.7)
-    top_p = request_data.get('top_p')  # Gemini supports top_p
-    max_output_tokens = request_data.get('max_output_tokens', request_data.get('max_new_tokens', 2048))
+    temperature = request.json.get('temperature', 0.7)
+    top_p = request.json.get('top_p')  # Gemini supports top_p
+    max_output_tokens = request.json.get('max_output_tokens', request.json.get('max_new_tokens', 2048))
     
     if not query:
         return jsonify({"error": "Parameter 'query' is required"}), 400
@@ -326,6 +352,28 @@ def proxy_gemini_functions():
             }), 500
     
     return jsonify({"error": "Maximum retries exceeded"}), 500
+
+@app.route('/api/gemini_health', methods=['GET'])
+def gemini_health_check():
+    """
+    Health check endpoint to verify Gemini API key configuration.
+    """
+    print("Received request for /api/gemini_health")
+    gemini_api_key = request.headers.get('X-Gemini-API-Key') or os.environ.get('GEMINI_API_KEY')
+    
+    if not gemini_api_key:
+        print("Health check: No Gemini API key found in headers or environment.")
+        return jsonify({"status": "error", "message": "Gemini API key not found in X-Gemini-API-Key header or GEMINI_API_KEY environment variable."}), 401
+    
+    print(f"Health check: Attempting to configure Gemini with key: {gemini_api_key[:5]}...{gemini_api_key[-4:] if len(gemini_api_key) > 9 else ''}")
+    try:
+        genai.configure(api_key=gemini_api_key)
+        print("Health check: Gemini SDK configured successfully.")
+        return jsonify({"status": "success", "message": "Gemini API key configured successfully."})
+    except Exception as e:
+        error_message = f"Failed to configure Gemini SDK: {str(e)}"
+        print(f"Health check: {error_message}")
+        return jsonify({"status": "error", "message": "Failed to configure Gemini API key.", "details": str(e)}), 500
 
 @app.route('/api/chat', methods=['POST'])
 def chat():

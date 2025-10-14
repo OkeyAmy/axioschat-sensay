@@ -28,12 +28,10 @@
 ### 🔗 Live Demo & Pitch
 
 <div align="center">
-  <a href="https://axioschat-r2jy.vercel.app/" target="_blank">
+  <a href="https://axioschat-sensay.vercel.app/" target="_blank">
     <img src="https://img.shields.io/badge/Try_AxiosChat-Live_Demo-4E56A6?style=for-the-badge&logo=vercel" alt="Live Demo" />
   </a>
 </div>
-
-> **Note:** AI functionality may be limited on the live demo due to API key constraints.
 
 ## ✨ Key Features & Recent Enhancements
 
@@ -45,14 +43,14 @@
 * **Educational Context**: Learn as you go! AxiosChat provides explanations for blockchain concepts and transaction details.
 * **Secure by Design**: Critical operations require user approval via a clear transaction queue, giving you full control.
 
-### 🎨 Enhanced User Interface (Recent Upgrade!)
+### 🎨 Enhanced User Interface
 
 * **Dynamic & Engaging**: Animated message bubbles and a visually appealing design with modern gradients.
 * **Crystal-Clear Code Formatting**: Improved readability for technical information.
 * **User-Friendly Interactions**: Easy message copying and categorized prompt suggestions to guide your exploration.
 * **Responsive Design**: Smooth experience across all devices.
 
-### 🛡️ Unprecedented Robustness (Recent Upgrade!)
+### 🛡️ Unprecedented Robustness
 
 * **Graceful Error Handling**: Advanced error boundaries and try-catch blocks prevent UI freezes or crashes.
 * **Fallback Mechanisms**: The UI gracefully degrades if optional dependencies (like animation libraries) fail to load, ensuring core functionality remains.
@@ -61,7 +59,7 @@
 ### 🧠 AI Strategy
 
 * **Primary Model - Sensay AI Network**: Leverages the Sensay AI Network as a blockchain-specialized knowledge engine, delivering chat-based Q&A, replica management, and on-chain insights via its `/v1/replicas/{replicaUUID}/chat/completions` and experimental `/v1/experimental/replicas/{replicaUUID}/chat/completions` endpoints.
-* **Fallback Model - Gemini**: If a Sensay API key isn't provided or you toggle off Sensay in the UI, the app automatically falls back to Gemin's conversational LLM (`gemini-2.0-flash`) for general-purpose dialogue.
+* **Fallback Model - Gemini**: If a Sensay API key isn't provided or you toggle off Sensay in the UI, the app automatically falls back to Gemini's conversational LLM (`gemini-2.0-flash`) for general-purpose dialogue.
 * **Model Switching**: Use the Model Settings panel in the chat UI to switch between Sensay and Gemini at runtime when multiple keys are available.
 * **Customizable API Keys**: Configure both `VITE_SENSAY_API_KEY` and `VITE_GEMINI_API_KEY` in your `.env`; the app reads Sensay first then falls back to Gemini.
 
@@ -169,8 +167,8 @@ graph TD;
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/OkeyAmy/Axioschat.git # Replace with your actual repo URL
-   cd Axioschat
+   git clone https://github.com/OkeyAmy/axioschat-sensay.git
+   cd axioschat-sensay
    ```
 
 2. **Install Dependencies**:
@@ -184,9 +182,6 @@ graph TD;
    ```env
    VITE_SENSAY_API_KEY=your_sensay_api_key
    VITE_GEMINI_API_KEY=your_gemini_api_key
-   # Optional fallbacks:
-   # VITE_OPENAI_API_KEY=your_openai_api_key
-   # VITE_REPLICATE_API_KEY=your_replicate_api_key
    ```
    - **Sensay (default)**: used for specialized blockchain Q&A via Sensay AI Network.
    - **Gemini (fallback)**: used if Sensay key is missing or toggled off in the UI.
@@ -198,9 +193,24 @@ graph TD;
    ```
    The application will be available at `http://localhost:8081` or another port if specified.
 
+5. **Configure Python Backend**:
+   ```bash
+   # Create and activate virtual environment
+   python -m venv venv
+   source venv/bin/activate  # Linux/MacOS
+   # venv\Scripts\activate  # Windows
+
+   # Install dependencies
+   pip install -r requirements.txt
+   ```
+
+6. **Start Backend Service**:
+   ```bash
+   python api/replicate_py.py
+   ```
+   *The backend uses Gemini for function calling, returning responses through the frontend's selected model (Sensay/Gemini) based on user configuration.*
+
 ## 🔮 Future Roadmap & Vision
-
-
 
 * **Phase 1 (Achieved & Enhanced)**: Core conversational AI, Web3 function calling, robust UI, secure transaction handling, support for Ethereum.
 * **Phase 2**: Expansion to additional EVM chains (e.g., Polygon, BNB Chain, Arbitrum) and popular L2s.
