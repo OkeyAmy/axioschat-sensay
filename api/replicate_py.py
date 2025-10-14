@@ -182,8 +182,8 @@ def gemini_functions_proxy():
     query = request.json.get('query')
     tools_json_string = request.json.get('tools')  # Expected as JSON string from createDefaultWeb3Tools; optional
     
-    # Default to gemini-2.5-flash per product decision
-    model_name = request.json.get('model', 'gemini-2.5-flash')
+    # Default to lightweight model for lower latency/cost
+    model_name = request.json.get('model', 'models/gemini-2.5-flash-lite')
     
     temperature = request.json.get('temperature', 0.7)
     top_p = request.json.get('top_p')  # Gemini supports top_p
@@ -350,11 +350,12 @@ def gemini_functions_proxy():
                 continue
             
             # Return a more user-friendly error for the frontend
+            # Structured, friendly error response for frontend
             return jsonify({
-                "error": "We encountered an issue processing your request with the AI model. Please try again.",
-                "debug_info": str(e),
-                "status": "error"
-            }), 500
+                "status": "error",
+                "error": "AI backend error. Please try again shortly.",
+                "details": str(e)[:500]
+            }), 502
     
     return jsonify({"error": "Maximum retries exceeded"}), 500
 

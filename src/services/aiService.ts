@@ -173,15 +173,24 @@ export async function callOpenAI(options: OpenAIOptions, useSensay: boolean = fa
       body: JSON.stringify({
         query,
         tools: "[]",
-        model: "gemini-2.5-flash",
+        model: "models/gemini-2.5-flash-lite",
         temperature: options.temperature || 0.7,
         max_output_tokens: options.max_tokens || 2000,
       }),
     });
 
     if (!response.ok) {
+      // Map common status codes to friendly messages
       const text = await response.text();
-      throw new Error(`gemini_functions error ${response.status}: ${text}`);
+      let friendly = text;
+      if (response.status === 401) {
+        friendly = "Authentication failed for the AI backend. Ensure the server has a valid GEMINI_API_KEY.";
+      } else if (response.status === 429) {
+        friendly = "Rate limit reached for the AI model. Please wait a bit and try again.";
+      } else if (response.status === 502) {
+        friendly = "AI backend is temporarily unavailable (502). Retrying in a moment may help.";
+      }
+      throw new Error(`gemini_functions error ${response.status}: ${friendly}`);
     }
 
     const data = await response.json();
