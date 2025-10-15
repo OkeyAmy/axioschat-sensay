@@ -34,9 +34,10 @@ try {
 
 interface ChatMessagesProps {
   messages: { role: string; content: string }[]
+  isTyping?: boolean
 }
 
-const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
+const ChatMessages: React.FC<ChatMessagesProps> = ({ messages, isTyping = false }) => {
   const [copiedMessageIndex, setCopiedMessageIndex] = useState<number | null>(null);
   const [hasError, setHasError] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -170,6 +171,20 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
             )}
           </div>
         ))}
+        {isTyping && (
+          <div className={cn("group flex items-start gap-3 max-w-[94%] md:max-w-[80%]")}> 
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+              <Bot size={16} className="text-white" />
+            </div>
+            <div className="rounded-2xl px-5 py-3 shadow-md bg-gray-100 dark:bg-gray-800 rounded-tl-sm">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <span className="inline-block w-2 h-2 rounded-full bg-current animate-bounce [animation-delay:0ms]"></span>
+                <span className="inline-block w-2 h-2 rounded-full bg-current animate-bounce [animation-delay:150ms]"></span>
+                <span className="inline-block w-2 h-2 rounded-full bg-current animate-bounce [animation-delay:300ms]"></span>
+              </div>
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
     );

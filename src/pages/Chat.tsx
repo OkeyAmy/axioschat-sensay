@@ -947,8 +947,9 @@ Please explain what this result means for the user in a concise and helpful way.
                 ) : (
                   <ChatMessages
                     messages={messages
-                      .filter((m) => m.role !== "function" || debugMode) // Show function messages only in debug mode
+                      .filter((m) => m.role !== "function" || debugMode)
                       .map((m) => ({ role: m.role, content: m.content }))}
+                    isTyping={loading || executingFunction}
                   />
                 )}
                 <div ref={messagesEndRef} />
