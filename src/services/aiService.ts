@@ -181,7 +181,7 @@ export async function callOpenAI(options: OpenAIOptions, useSensay: boolean = fa
 
     // Create request body
     const requestBody = {
-      model: "gemini-2.0-flash",
+      model: "gemini-3-flash-preview",
       messages: formattedMessages,
       temperature: options.temperature || 0.7,
       max_tokens: options.max_tokens || 2000,
