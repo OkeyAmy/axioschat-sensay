@@ -186,7 +186,7 @@ DO NOT make up any blockchain data. ONLY identify if a function call is needed.`
         try {
           detectionResponse = await callOpenAI(
             {
-              model: "gemini-2.0-flash",
+              model: "gemini-3-flash-preview",
               messages: conversationalMessages,
               temperature: 0.7,
               top_p: 0.9,
@@ -227,7 +227,7 @@ DO NOT make up any blockchain data. ONLY identify if a function call is needed.`
           // Use Gemini directly; backend holds the key
           try {
             llamaResponse = await callOpenAI({
-              model: "gemini-2.0-flash",
+              model: "gemini-3-flash-preview",
               messages: conversationalMessages,
               temperature: 0.7,
               top_p: 0.9,
@@ -393,7 +393,7 @@ Be concise and direct. Don't just repeat the raw data - explain its significance
 
                 if (useOpenAI) {
                   interpretationResponse = await callOpenAI({
-                    model: "gemini-2.0-flash",
+                    model: "gemini-3-flash-preview",
                     messages: interpretationMessages,
                     temperature: 0.7,
                     top_p: 0.9,
@@ -651,7 +651,7 @@ Please explain what this result means for the user in a concise and helpful way.
 
                 if (useOpenAI) {
                   interpretationResponse = await callOpenAI({
-                    model: "gemini-2.5-flash",
+                    model: "gemini-3-flash-preview",
                     messages: interpretationMessages,
                     temperature: 0.7,
                     top_p: 0.9,

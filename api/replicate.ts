@@ -66,7 +66,7 @@ export default async function handler(req: NextRequest) {
 
     // Call Gemini API through OpenAI compatibility layer
     const response = await openai.chat.completions.create({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3-flash-preview',
       messages: [
         {
           role: 'system',

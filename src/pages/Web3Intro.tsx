@@ -663,7 +663,7 @@ Use this context to answer any user questions about Sensay or Cyberscope compreh
 
             // Call Gemini
             aiResponse = await callOpenAI({
-              model: "gemini-2.5-flash",
+              model: "gemini-3-flash-preview",
               messages: conversationalMessages,
               temperature: 0.7,
               top_p: 0.9,

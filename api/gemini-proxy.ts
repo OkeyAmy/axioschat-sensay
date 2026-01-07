@@ -85,7 +85,7 @@ export default async function handler(req: Request) {
 
     // Extract parameters from the request
     const {
-      model = 'gemini-2.0-flash',
+      model = 'gemini-3-flash-preview',
       messages,
       temperature = 0.7,
       max_tokens = 2000

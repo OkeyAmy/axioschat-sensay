@@ -183,7 +183,7 @@ def gemini_functions_proxy():
     tools_json_string = request.json.get('tools')  # Expected as JSON string from createDefaultWeb3Tools
 
     # main branch default model for function calling
-    model_name = request.json.get('model', 'gemini-2.0-flash')
+    model_name = request.json.get('model', 'gemini-3-flash-preview')
     
     temperature = request.json.get('temperature', 0.7)
     top_p = request.json.get('top_p')  # Gemini supports top_p

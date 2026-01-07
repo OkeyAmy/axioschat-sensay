@@ -49,7 +49,7 @@ export const callGeminiForFunctions = async (
       top_p: input.top_p || 0.9,
       temperature: input.temperature || 0.7,
       max_output_tokens: input.max_output_tokens || 3000,
-      model: "gemini-2.0-flash" // main branch default for function calling
+      model: "gemini-3-flash-preview" // main branch default for function calling
     }
 
     console.log("Request body:", JSON.stringify(requestBody, null, 2))
